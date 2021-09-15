@@ -11,13 +11,19 @@ public class ProductPrice {
     @Column(name = "price_id", nullable = false)
     private Long priceId;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "currency_id")
+    private ProductCurrency currency;
 
-    @ManyToOne
-    @JoinColumn(name = "currency_id", nullable = false)
-    private Currency currency;
+    private Integer price;
+
+    public ProductPrice() {
+    }
+
+    public ProductPrice(ProductCurrency currency, Integer price) {
+        this.currency = currency;
+        this.price = price;
+    }
 
     public Long getPriceId() {
         return priceId;
@@ -27,19 +33,20 @@ public class ProductPrice {
         this.priceId = priceId;
     }
 
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public Currency getCurrency() {
+    public ProductCurrency getCurrency() {
         return currency;
     }
 
-    public void setCurrency(Currency currency) {
+    public void setCurrency(ProductCurrency currency) {
         this.currency = currency;
     }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
 }

@@ -2,7 +2,6 @@ package com.schauzov.crudapp.model;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.Currency;
 import java.util.Set;
 
 @Entity
@@ -11,25 +10,19 @@ public class Product {
     @Id
     @SequenceGenerator(name = "product_seq", sequenceName = "product_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq")
-    @Column(name = "product_id", nullable = false)
+    @Column(name = "product_id")
     private Long productId;
 
-    @OneToMany(mappedBy="product")
-    private Set<ProductInfo> productInfoSet;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "product_id")
+    private Set<ProductInfo> productInfo;
 
-    @OneToMany(mappedBy="product")
-    private Set<ProductPrice> productPriceSet;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "product_id")
+    private Set<ProductPrice> productPrices;
 
     private LocalDate created;
     private LocalDate modified;
-
-    public Long getId() {
-        return productId;
-    }
-
-    public void setId(Long id) {
-        this.productId = id;
-    }
 
     public LocalDate getCreated() {
         return created;
@@ -46,4 +39,29 @@ public class Product {
     public void setModified(LocalDate modified) {
         this.modified = modified;
     }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public Set<ProductInfo> getProductInfo() {
+        return productInfo;
+    }
+
+    public void setProductInfo(Set<ProductInfo> productInfo) {
+        this.productInfo = productInfo;
+    }
+
+    public Set<ProductPrice> getProductPrices() {
+        return productPrices;
+    }
+
+    public void setProductPrices(Set<ProductPrice> productPrices) {
+        this.productPrices = productPrices;
+    }
+
 }
