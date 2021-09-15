@@ -1,7 +1,7 @@
 package com.schauzov.crudapp.service;
 
-import com.schauzov.crudapp.model.Product;
-import com.schauzov.crudapp.repository.ProductRepository;
+import com.schauzov.crudapp.model.*;
+import com.schauzov.crudapp.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +21,12 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
-    public void addProduct(Product product) {
-        productRepository.save(product);
+    public Product addProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    public void deleteProduct(Long id) {
+        productRepository.deleteById(id);
     }
 
 }

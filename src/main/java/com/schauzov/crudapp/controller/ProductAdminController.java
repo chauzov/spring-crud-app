@@ -1,8 +1,7 @@
 package com.schauzov.crudapp.controller;
 
-import com.schauzov.crudapp.exception.ProductNotFoundException;
-import com.schauzov.crudapp.model.Product;
-import com.schauzov.crudapp.service.ProductService;
+import com.schauzov.crudapp.rest.ProductRestStructure;
+import com.schauzov.crudapp.service.ProductRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,23 +9,25 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "api/v1/product-admin")
 public class ProductAdminController {
 
-    private final ProductService productService;
+    private final ProductRestService productRestService;
 
     @Autowired
-    public ProductAdminController(ProductService productService) {
-        this.productService = productService;
+    public ProductAdminController(ProductRestService productRestService) {
+        this.productRestService = productRestService;
     }
 
     @GetMapping(path = "{productId}")
-    public Product getProductById(@PathVariable("productId") Long id) {
-        return productService.getProductById(id).orElseThrow(
-                () -> new ProductNotFoundException("The product with id " + id + " is not found")
-        );
+    public ProductRestStructure getProductById(@PathVariable("productId") Long id) {
+        return productRestService.getProductById(id);
     }
 
     @PostMapping
-    public void addProduct(@RequestBody Product product) {
+    public ProductRestStructure addProduct(@RequestBody ProductRestStructure product) {
+        return productRestService.addProduct(product);
+    }
 
-        productService.addProduct(product);
+    @DeleteMapping(path = "{productId}")
+    public void deleteProduct(@PathVariable("productId") Long id) {
+        productRestService.deleteProduct(id);
     }
 }
