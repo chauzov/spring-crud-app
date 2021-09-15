@@ -23,6 +23,8 @@ public class ProductPrice {
         this.price = price;
     }
 
+
+
     public Long getPriceId() {
         return priceId;
     }

@@ -5,6 +5,7 @@ import com.schauzov.crudapp.model.*;
 import com.schauzov.crudapp.rest.ProductInfoRestStructure;
 import com.schauzov.crudapp.rest.ProductPriceRestStructure;
 import com.schauzov.crudapp.rest.ProductRestStructure;
+import org.apache.tomcat.jni.Local;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,30 +32,10 @@ public class ProductRestService {
 
     public ProductRestStructure addProduct(ProductRestStructure productRestStructure) {
 
-        Product product = new Product();
-        LocalDate creationDate = LocalDate.now();
-        product.setCreated(creationDate);
-        product.setModified(creationDate);
-
-        // Prepare set with product info
-        Set<ProductInfo> productInfoSet = new HashSet<>();
-        productRestStructure.getProductInfo().forEach(pi -> productInfoSet.add(new ProductInfo(
-                pi.getLocale(),
-                pi.getName(),
-                pi.getDescription()
-        )));
-
-        // Prepare set with product prices
-        Set<ProductPrice> productPriceSet = new HashSet<>();
-        productRestStructure.getProductPrice().forEach(pp -> productPriceSet.add(new ProductPrice(
-                pp.getCurrency(),
-                pp.getPrice()
-        )));
-
-        product.setProductInfo(productInfoSet);
-        product.setProductPrices(productPriceSet);
-
-        return _convertProductToRest(productService.addProduct(product));
+        return _convertProductToRest(
+                productService.addOrSaveProduct(
+                        _convertRestToProduct(null, LocalDate.now(), productRestStructure)
+                ));
     }
 
     public void deleteProduct(Long id) {
@@ -62,6 +43,18 @@ public class ProductRestService {
             throw new ProductNotFoundException("The product with id " + id + " is not found");
         }
         productService.deleteProduct(id);
+    }
+
+    public ProductRestStructure updateProduct(Long productId, ProductRestStructure productRestStructure) {
+        Product currentProduct = productService.getProductById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("The product with id " + productId + " is not found"));
+
+        Product product = _convertRestToProduct(
+                productId,
+                currentProduct.getCreated(),
+                productRestStructure);
+
+        return _convertProductToRest(productService.addOrSaveProduct(product));
     }
 
     private ProductRestStructure _convertProductToRest(Product product) {
@@ -89,5 +82,29 @@ public class ProductRestService {
                 product.getCreated(),
                 product.getModified()
         );
+    }
+
+    private Product _convertRestToProduct(
+            Long productId,
+            LocalDate created,
+            ProductRestStructure body) {
+
+        // Prepare set with product info
+        Set<ProductInfo> productInfoSet = new HashSet<>();
+        body.getProductInfo().forEach(pi -> productInfoSet.add(new ProductInfo(
+                pi.getLocale(),
+                pi.getName(),
+                pi.getDescription()
+        )));
+
+        // Prepare set with product prices
+        Set<ProductPrice> productPriceSet = new HashSet<>();
+        body.getProductPrice().forEach(pp -> productPriceSet.add(new ProductPrice(
+                pp.getCurrency(),
+                pp.getPrice()
+        )));
+
+        return new Product(productId, productInfoSet, productPriceSet, created, LocalDate.now());
+
     }
 }

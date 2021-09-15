@@ -21,6 +21,13 @@ public class ProductInfo {
     public ProductInfo() {
     }
 
+    public ProductInfo(Long productInfoId, String name, String description, String locale) {
+        this.productInfoId = productInfoId;
+        this.name = name;
+        this.description = description;
+        this.locale = locale;
+    }
+
     public ProductInfo(String locale, String name, String description) {
         this.locale = locale;
         this.name = name;

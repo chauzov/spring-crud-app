@@ -24,6 +24,24 @@ public class Product {
     private LocalDate created;
     private LocalDate modified;
 
+    public Product() {
+    }
+
+    public Product(Set<ProductInfo> productInfo, Set<ProductPrice> productPrices, LocalDate created, LocalDate modified) {
+        this.productInfo = productInfo;
+        this.productPrices = productPrices;
+        this.created = created;
+        this.modified = modified;
+    }
+
+    public Product(Long productId, Set<ProductInfo> productInfo, Set<ProductPrice> productPrices, LocalDate created, LocalDate modified) {
+        this.productId = productId;
+        this.productInfo = productInfo;
+        this.productPrices = productPrices;
+        this.created = created;
+        this.modified = modified;
+    }
+
     public Long getProductId() {
         return productId;
     }
