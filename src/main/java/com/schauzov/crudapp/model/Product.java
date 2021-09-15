@@ -24,22 +24,6 @@ public class Product {
     private LocalDate created;
     private LocalDate modified;
 
-    public LocalDate getCreated() {
-        return created;
-    }
-
-    public void setCreated(LocalDate created) {
-        this.created = created;
-    }
-
-    public LocalDate getModified() {
-        return modified;
-    }
-
-    public void setModified(LocalDate modified) {
-        this.modified = modified;
-    }
-
     public Long getProductId() {
         return productId;
     }
@@ -64,4 +48,19 @@ public class Product {
         this.productPrices = productPrices;
     }
 
+    public LocalDate getCreated() {
+        return created;
+    }
+
+    public void setCreated(LocalDate created) {
+        this.created = created;
+    }
+
+    public LocalDate getModified() {
+        return modified;
+    }
+
+    public void setModified(LocalDate modified) {
+        this.modified = modified;
+    }
 }

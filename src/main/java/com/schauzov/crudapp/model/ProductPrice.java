@@ -10,17 +10,15 @@ public class ProductPrice {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_price_seq")
     @Column(name = "price_id", nullable = false)
     private Long priceId;
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "currency_id")
-    private ProductCurrency currency;
-
+    @Column
+    private String currency;
+    @Column
     private Integer price;
 
     public ProductPrice() {
     }
 
-    public ProductPrice(ProductCurrency currency, Integer price) {
+    public ProductPrice(String currency, Integer price) {
         this.currency = currency;
         this.price = price;
     }
@@ -33,11 +31,11 @@ public class ProductPrice {
         this.priceId = priceId;
     }
 
-    public ProductCurrency getCurrency() {
+    public String getCurrency() {
         return currency;
     }
 
-    public void setCurrency(ProductCurrency currency) {
+    public void setCurrency(String currency) {
         this.currency = currency;
     }
 
@@ -48,5 +46,4 @@ public class ProductPrice {
     public void setPrice(Integer price) {
         this.price = price;
     }
-
 }

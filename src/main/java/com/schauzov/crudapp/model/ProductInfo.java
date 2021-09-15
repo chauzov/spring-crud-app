@@ -11,20 +11,17 @@ public class ProductInfo {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_info_seq")
     @Column(name = "product_info_id")
     private Long productInfoId;
-
     @Column
     private String name;
     @Column
     private String description;
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "locale_id")
-    private ProductLocale locale;
+    @Column
+    private String locale;
 
     public ProductInfo() {
     }
 
-    public ProductInfo(ProductLocale locale, String name, String description) {
+    public ProductInfo(String locale, String name, String description) {
         this.locale = locale;
         this.name = name;
         this.description = description;
@@ -36,14 +33,6 @@ public class ProductInfo {
 
     public void setProductInfoId(Long productInfoId) {
         this.productInfoId = productInfoId;
-    }
-
-    public ProductLocale getLocale() {
-        return locale;
-    }
-
-    public void setLocale(ProductLocale locale) {
-        this.locale = locale;
     }
 
     public String getName() {
@@ -62,4 +51,11 @@ public class ProductInfo {
         this.description = description;
     }
 
+    public String getLocale() {
+        return locale;
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
+    }
 }
