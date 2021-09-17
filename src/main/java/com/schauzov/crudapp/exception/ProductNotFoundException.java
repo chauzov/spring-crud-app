@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
 public class ProductNotFoundException extends NoSuchElementException {
-    public ProductNotFoundException(String msg) {
-        super(msg);
+    public ProductNotFoundException(Long id) {
+        super(String.format("The product with id %s is not found", id));
     }
 }

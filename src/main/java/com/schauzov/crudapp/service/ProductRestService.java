@@ -1,11 +1,14 @@
 package com.schauzov.crudapp.service;
 
 import com.schauzov.crudapp.exception.ProductNotFoundException;
-import com.schauzov.crudapp.model.*;
+import com.schauzov.crudapp.exception.ProductNotFoundForCustomerException;
+import com.schauzov.crudapp.model.Product;
+import com.schauzov.crudapp.model.ProductInfo;
+import com.schauzov.crudapp.model.ProductPrice;
 import com.schauzov.crudapp.rest.ProductInfoRestStructure;
 import com.schauzov.crudapp.rest.ProductPriceRestStructure;
 import com.schauzov.crudapp.rest.ProductRestStructure;
-import org.apache.tomcat.jni.Local;
+import com.schauzov.crudapp.rest.ProductRestStructureForCustomer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,40 +27,70 @@ public class ProductRestService {
 
     public ProductRestStructure getProductById(Long id) {
         Product product = productService.getProductById(id).orElseThrow(
-                () -> new ProductNotFoundException("The product with id " + id + " is not found")
+                () -> new ProductNotFoundException(id)
         );
-
-        return _convertProductToRest(product);
+        return _convertProductToRestForAdmin(product);
     }
 
     public ProductRestStructure addProduct(ProductRestStructure productRestStructure) {
-
-        return _convertProductToRest(
+        return _convertProductToRestForAdmin(
                 productService.addOrSaveProduct(
-                        _convertRestToProduct(null, LocalDate.now(), productRestStructure)
+                        _convertRestToProductForAdmin(null, LocalDate.now(), productRestStructure)
                 ));
     }
 
     public void deleteProduct(Long id) {
-        if ( productService.getProductById(id).isEmpty()) {
-            throw new ProductNotFoundException("The product with id " + id + " is not found");
+        if (productService.getProductById(id).isEmpty()) {
+            throw new ProductNotFoundException(id);
         }
         productService.deleteProduct(id);
     }
 
     public ProductRestStructure updateProduct(Long productId, ProductRestStructure productRestStructure) {
         Product currentProduct = productService.getProductById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("The product with id " + productId + " is not found"));
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
-        Product product = _convertRestToProduct(
+        Product product = _convertRestToProductForAdmin(
                 productId,
                 currentProduct.getCreated(),
                 productRestStructure);
 
-        return _convertProductToRest(productService.addOrSaveProduct(product));
+        return _convertProductToRestForAdmin(productService.addOrSaveProduct(product));
     }
 
-    private ProductRestStructure _convertProductToRest(Product product) {
+    public ProductRestStructureForCustomer getProductForCustomer(Long id, String locale, String currency)
+            throws ProductNotFoundForCustomerException {
+
+        Product product = productService.getProductByIdForCustomer(id, locale, currency);
+        return _convertProductToRestForCustomer(product);
+    }
+
+    public Set<ProductRestStructureForCustomer> getAllProductsForCustomer(String locale, String currency) {
+        Set<ProductRestStructureForCustomer> productsForCustomer = new HashSet<>();
+        productService.getAllProductsForCustomer(locale, currency)
+                .forEach(p -> productsForCustomer.add(_convertProductToRestForCustomer(p)));
+        return productsForCustomer;
+    }
+
+    public Set<ProductRestStructureForCustomer> getProductsBySearchStringForCustomer(
+            String locale, String currency, String nameOrDescription) {
+        productService.getProductsBySearchStringForCustomer(String locale, String currency, String nameOrDescription) {}
+    }
+
+
+    private ProductRestStructureForCustomer _convertProductToRestForCustomer(Product product) {
+        return new ProductRestStructureForCustomer(
+                product.getProductId(),
+                product.getProductInfo().stream().findAny().get().getName(),
+                product.getProductInfo().stream().findAny().get().getDescription(),
+                product.getProductInfo().stream().findAny().get().getLocale(),
+                product.getProductPrices().stream().findAny().get().getPrice(),
+                product.getProductPrices().stream().findAny().get().getCurrency()
+        );
+    }
+
+
+    private ProductRestStructure _convertProductToRestForAdmin(Product product) {
         Set<ProductInfo> productInfoSet = product.getProductInfo();
         Set<ProductPrice> productPrices = product.getProductPrices();
 
@@ -84,7 +117,8 @@ public class ProductRestService {
         );
     }
 
-    private Product _convertRestToProduct(
+
+    private Product _convertRestToProductForAdmin(
             Long productId,
             LocalDate created,
             ProductRestStructure body) {
@@ -107,4 +141,5 @@ public class ProductRestService {
         return new Product(productId, productInfoSet, productPriceSet, created, LocalDate.now());
 
     }
+
 }

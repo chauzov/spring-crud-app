@@ -1,6 +1,8 @@
 package com.schauzov.crudapp.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 @Entity
 @Table(name = "product_price")
@@ -11,8 +13,10 @@ public class ProductPrice {
     @Column(name = "price_id", nullable = false)
     private Long priceId;
     @Column
+    @NotNull(message = "Currency has to be specified")
     private String currency;
     @Column
+    @Positive(message = "Price has to be more than zero")
     private Integer price;
 
     public ProductPrice() {

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "api/v1/product-admin")
+@RequestMapping(path = "api/v1/admin/product")
 public class ProductAdminController {
 
     private final ProductRestService productRestService;

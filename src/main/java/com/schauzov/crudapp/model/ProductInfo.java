@@ -1,6 +1,7 @@
 package com.schauzov.crudapp.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "product_info")
@@ -12,10 +13,12 @@ public class ProductInfo {
     @Column(name = "product_info_id")
     private Long productInfoId;
     @Column
+    @NotNull(message = "Name cannot be null")
     private String name;
     @Column
     private String description;
     @Column
+    @NotNull(message = "locale cannot be null")
     private String locale;
 
     public ProductInfo() {
