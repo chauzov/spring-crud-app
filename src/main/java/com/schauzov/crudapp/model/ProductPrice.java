@@ -28,7 +28,6 @@ public class ProductPrice {
     }
 
 
-
     public Long getPriceId() {
         return priceId;
     }

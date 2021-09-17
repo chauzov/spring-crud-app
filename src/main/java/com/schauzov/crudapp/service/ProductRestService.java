@@ -72,11 +72,6 @@ public class ProductRestService {
         return productsForCustomer;
     }
 
-    public Set<ProductRestStructureForCustomer> getProductsBySearchStringForCustomer(
-            String locale, String currency, String nameOrDescription) {
-        productService.getProductsBySearchStringForCustomer(String locale, String currency, String nameOrDescription) {}
-    }
-
 
     private ProductRestStructureForCustomer _convertProductToRestForCustomer(Product product) {
         return new ProductRestStructureForCustomer(

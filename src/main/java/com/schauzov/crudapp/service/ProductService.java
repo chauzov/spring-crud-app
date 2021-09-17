@@ -63,10 +63,6 @@ public class ProductService {
         return filteredProducts;
     }
 
-    public Set<Product> getProductsBySearchStringForCustomer(String locale, String currency, String nameOrDescription) {
-
-        Set<Product> productsFilteredByLocale
-    }
 
     /**
      * Takes a product to input and removes all product info and prices that don't have

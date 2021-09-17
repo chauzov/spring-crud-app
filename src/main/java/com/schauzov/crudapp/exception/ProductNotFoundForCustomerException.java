@@ -8,4 +8,3 @@ public class ProductNotFoundForCustomerException extends NoSuchElementException 
                 "The product with id %d is not found for locale %s and currency %s", id, locale, currency));
     }
 }
-

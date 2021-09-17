@@ -39,10 +39,11 @@ public class ProductClientController {
             @RequestParam(required = false) String searchString
     )
     {
-        if (searchString == null) {
-            return productRestService.getAllProductsForCustomer(locale, currency);
+        if (searchString != null) {
+            // TODO: implement search
+            //return productRestService.getProductsBySearchStringForCustomer(locale, currency, searchString);
         }
-        return productRestService.getProductsBySearchStringForCustomer(locale, currency, searchString);
+        return productRestService.getAllProductsForCustomer(locale, currency);
     }
 
     @ExceptionHandler(ProductNotFoundForCustomerException.class)
