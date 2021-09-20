@@ -62,10 +62,11 @@ DELETE `http://localhost:8080/api/v1/admin/product/{ID}`
 # How to test customer functionality:
 
 1. Run a GET to the URL `http://localhost:8080/api/v1/customer/product/{PRODUCT_ID}?locale={LOCALE_ID}&currency={CURRENCY_ID}`
-Examples: 
-PRODUCT_ID: 1
-LOCALE_ID: en
-CURRENCY_ID: usd
+Examples:
+
+- PRODUCT_ID: 1
+- LOCALE_ID: en
+- CURRENCY_ID: usd
 
 
 2. Get all products:
