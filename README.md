@@ -13,7 +13,7 @@ postgres=# grant all privileges on database products to products;
 3. Build and run the application
 
 
-#How to test admin functionality:
+# How to test admin functionality:
 
 1. Create new product entry:
 
@@ -59,7 +59,7 @@ DELETE `http://localhost:8080/api/v1/admin/product/{ID}`
 
 
 
-#How to test customer functionality:
+# How to test customer functionality:
 
 1. Run a GET to the URL `http://localhost:8080/api/v1/customer/product/{PRODUCT_ID}?locale={LOCALE_ID}&currency={CURRENCY_ID}`
 Examples: 
