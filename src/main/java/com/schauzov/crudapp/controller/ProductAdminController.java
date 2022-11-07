@@ -1,7 +1,8 @@
 package com.schauzov.crudapp.controller;
 
-import com.schauzov.crudapp.rest.ProductRestStructure;
-import com.schauzov.crudapp.service.ProductRestService;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.schauzov.crudapp.dto.AdminProductDTO;
+import com.schauzov.crudapp.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,30 +10,36 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "api/v1/admin/product")
 public class ProductAdminController {
 
-    private final ProductRestService productRestService;
+    private final ProductService productService;
 
     @Autowired
-    public ProductAdminController(ProductRestService productRestService) {
-        this.productRestService = productRestService;
+    public ProductAdminController(ProductService productService) {
+        this.productService = productService;
     }
 
     @GetMapping(path = "{productId}")
-    public ProductRestStructure getProductById(@PathVariable("productId") Long id) {
-        return productRestService.getProductById(id);
+    public AdminProductDTO getProductById(@PathVariable("productId") Long id) {
+        return productService.getProductById(id);
     }
 
     @PostMapping
-    public ProductRestStructure addProduct(@RequestBody ProductRestStructure body) {
-        return productRestService.addProduct(body);
+    public void addProduct(@RequestBody AdminProductDTO body) {
+        productService.addProduct(body);
     }
 
     @DeleteMapping(path = "{productId}")
     public void deleteProduct(@PathVariable("productId") Long id) {
-        productRestService.deleteProduct(id);
+        productService.deleteProduct(id);
     }
 
-    @PutMapping(path = "{productId}")
-    public ProductRestStructure updateProduct(@PathVariable("productId") Long id, @RequestBody ProductRestStructure body) {
-        return productRestService.updateProduct(id, body);
+    @PutMapping(path = "{productId}", consumes = "application/json")
+    public void updateProduct(@PathVariable("productId") Long id, @RequestBody AdminProductDTO productDTO) {
+        productService.updateProduct(id, productDTO);
     }
+
+    @PatchMapping(path = "{productId}/prices", consumes = "application/json")
+    public void updateProductPrices(@PathVariable("productId") Long id, @RequestBody JsonPatch patch) {}
+
+    @PatchMapping(path = "{productId}/info", consumes = "application/json")
+    public void updateProductInfo(@PathVariable("productId") Long id, @RequestBody JsonPatch patch) {}
 }

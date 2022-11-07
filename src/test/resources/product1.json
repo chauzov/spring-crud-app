@@ -1,0 +1,21 @@
+{
+  "productInfo": [
+    {
+      "locale": "es",
+      "name": "La leche",
+      "description": "Leche normal 3%"
+    },{
+      "locale": "fr",
+      "name": "Le Lait",
+      "description": "Lait ordinaire 3%"
+    }
+  ],
+  "productPrices": [
+    {
+      "price": 2.2,
+      "currency": "EUR"
+    },{
+      "price": 2.5,
+      "currency": "USD"}
+  ]
+}

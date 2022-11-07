@@ -1,95 +1,29 @@
 package com.schauzov.crudapp.service;
 
-import com.schauzov.crudapp.exception.ProductNotFoundForCustomerException;
-import com.schauzov.crudapp.model.*;
-import com.schauzov.crudapp.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.schauzov.crudapp.dto.AdminProductDTO;
+import com.schauzov.crudapp.dto.CustomerProductDTO;
+import com.schauzov.crudapp.dto.ProductPriceDTO;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.Currency;
+import java.util.Locale;
 import java.util.Set;
 
-@Service
-public class ProductService {
+public interface ProductService {
 
-    private final ProductRepository productRepository;
+    AdminProductDTO getProductById(Long productId);
 
-    @Autowired
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
+    void addProduct(AdminProductDTO productModel);
 
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
-    }
+    void deleteProduct(Long productId);
 
-    public Product addOrSaveProduct(Product product) {
-        return productRepository.save(product);
-    }
+    void updateProduct(Long productId, AdminProductDTO productDTO);
 
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
-    }
+    void updateProductPrices(Long productId, JsonPatch patch);
 
-    public Product getProductByIdForCustomer(Long id, String locale, String currency)
-            throws ProductNotFoundForCustomerException {
+    void updateProductInfo(Long productId, JsonPatch patch);
 
-        Product product = getProductById(id).orElseThrow(
-                () -> new ProductNotFoundForCustomerException(id, locale, currency)
-        );
+    CustomerProductDTO getProductById(Long productId, Locale locale, Currency currency);
 
-        _filterLocaleAndCurrencyMutator(product, locale, currency);
-
-        if (product.getProductInfo() == null || product.getProductPrices().isEmpty()) {
-            throw new ProductNotFoundForCustomerException(id, locale, currency);
-        }
-
-        return product;
-    }
-
-    public Set<Product> getAllProductsForCustomer(String locale, String currency) {
-        List<Product> allProducts = productRepository.findAll();
-        Set<Product> filteredProducts = new HashSet<>();
-
-        allProducts.forEach(p -> {
-            _filterLocaleAndCurrencyMutator(p, locale, currency);
-            if (!p.getProductPrices().isEmpty() && !p.getProductInfo().isEmpty()) {
-                filteredProducts.add(p);
-            }
-        });
-
-        return filteredProducts;
-    }
-
-
-    /**
-     * Takes a product to input and removes all product info and prices that don't have
-     * required locale and currency
-     * */
-    private void _filterLocaleAndCurrencyMutator(Product product, String locale, String currency) {
-
-        Optional<ProductInfo> filteredInfo = product
-                .getProductInfo()
-                .stream()
-                .filter(productInfo -> productInfo.getLocale().equals(locale))
-                .findAny();
-
-        Optional<ProductPrice> filteredPrices = product
-                .getProductPrices()
-                .stream()
-                .filter(productPrice -> productPrice.getCurrency().equals(currency))
-                .findAny();
-
-        Set<ProductInfo> productInfoSet = new HashSet<>();
-        filteredInfo.ifPresent(productInfoSet::add);
-
-        Set<ProductPrice> productPrices = new HashSet<>();
-        filteredPrices.ifPresent(productPrices::add);
-
-        product.setProductInfo(productInfoSet);
-        product.setProductPrices(productPrices);
-    }
-
+    Set<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency, String searchString);
 }
