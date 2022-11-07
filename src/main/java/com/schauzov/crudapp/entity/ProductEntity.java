@@ -13,7 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Product {
+public class ProductEntity {
     @Id
     @SequenceGenerator(name = "product_seq", sequenceName = "product_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq")
@@ -22,11 +22,11 @@ public class Product {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "product_id")
-    private Set<ProductInfo> productInfo;
+    private Set<ProductInfoEntity> productInfo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "product_id")
-    private Set<ProductPrice> productPrices;
+    private Set<ProductPriceEntity> productPrices;
 
     private LocalDateTime created;
     private LocalDateTime modified;

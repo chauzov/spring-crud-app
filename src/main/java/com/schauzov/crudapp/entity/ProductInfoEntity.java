@@ -13,7 +13,7 @@ import java.util.Locale;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductInfo {
+public class ProductInfoEntity {
     @Id
     @SequenceGenerator(name = "product_info_seq", sequenceName = "product_info_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_info_seq")

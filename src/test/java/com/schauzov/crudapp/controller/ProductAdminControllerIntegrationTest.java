@@ -1,7 +1,7 @@
 package com.schauzov.crudapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.schauzov.crudapp.entity.Product;
+import com.schauzov.crudapp.entity.ProductEntity;
 import com.schauzov.crudapp.exception.TestInitializationException;
 import com.schauzov.crudapp.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -44,14 +44,14 @@ class ProductAdminControllerIntegrationTest {
     }
 
     private void addProductToDB(String productFilename) {
-        Product product;
+        ProductEntity productEntity;
         try {
-            product = objectMapper.readValue(new File(productFilename), Product.class);
+            productEntity = objectMapper.readValue(new File(productFilename), ProductEntity.class);
         } catch (IOException ioException) {
             log.error("Could not load file {}: {}", productFilename, ioException.getMessage());
             throw new TestInitializationException();
         }
-        productRepository.save(product);
+        productRepository.save(productEntity);
     }
 
     @Test

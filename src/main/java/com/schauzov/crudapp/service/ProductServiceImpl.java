@@ -9,9 +9,9 @@ import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.dto.CustomerProductDTO;
 import com.schauzov.crudapp.dto.ProductInfoDTO;
 import com.schauzov.crudapp.dto.ProductPriceDTO;
-import com.schauzov.crudapp.entity.Product;
-import com.schauzov.crudapp.entity.ProductInfo;
-import com.schauzov.crudapp.entity.ProductPrice;
+import com.schauzov.crudapp.entity.ProductEntity;
+import com.schauzov.crudapp.entity.ProductInfoEntity;
+import com.schauzov.crudapp.entity.ProductPriceEntity;
 import com.schauzov.crudapp.exception.ProductNotFoundException;
 import com.schauzov.crudapp.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class ProductServiceImpl implements ProductService {
 
     public AdminProductDTO getProductById(Long id) {
         // Return 404 with empty body when not found
-        Product productEntity = productRepository.findById(id)
+        ProductEntity productEntity = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
 
         Set<ProductInfoDTO> productInfoDTOSet = getProductInfoFromProductEntity(productEntity);
@@ -53,9 +53,9 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    private Set<ProductInfoDTO> getProductInfoFromProductEntity(Product productEntity) {
+    private Set<ProductInfoDTO> getProductInfoFromProductEntity(ProductEntity productEntity) {
         Set<ProductInfoDTO> productInfoDTOSet = new HashSet<>();
-        for (ProductInfo productInfo : productEntity.getProductInfo()) {
+        for (ProductInfoEntity productInfo : productEntity.getProductInfo()) {
             ProductInfoDTO productInfoDTO = ProductInfoDTO.builder()
                     .productInfoId(productInfo.getProductInfoId())
                     .name(productInfo.getName())
@@ -67,9 +67,9 @@ public class ProductServiceImpl implements ProductService {
         return productInfoDTOSet;
     }
 
-    private Set<ProductPriceDTO> getProductPriceFromProductEntity(Product productEntity) {
+    private Set<ProductPriceDTO> getProductPriceFromProductEntity(ProductEntity productEntity) {
         Set<ProductPriceDTO> productPriceDTOSet = new HashSet<>();
-        for(ProductPrice productPrice : productEntity.getProductPrices()) {
+        for(ProductPriceEntity productPrice : productEntity.getProductPrices()) {
             ProductPriceDTO productPriceDTO = ProductPriceDTO.builder()
                     .priceId(productPrice.getPriceId())
                     .price(productPrice.getPrice())
@@ -83,10 +83,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void addProduct(AdminProductDTO productDTO) {
         log.info("Adding product: " + productDTO);
-        Set<ProductInfo> productInfoSet = getProductInfoFromProductDTO(productDTO);
-        Set<ProductPrice> productPriceSet = getProductPricesFromProductDTO(productDTO);
+        Set<ProductInfoEntity> productInfoSet = getProductInfoFromProductDTO(productDTO);
+        Set<ProductPriceEntity> productPriceSet = getProductPricesFromProductDTO(productDTO);
 
-        Product productEntity = Product.builder()
+        ProductEntity productEntity = ProductEntity.builder()
                 .productInfo(productInfoSet)
                 .productPrices(productPriceSet)
                 .created(LocalDateTime.now())
@@ -96,10 +96,10 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(productEntity);
     }
 
-    private Set<ProductInfo> getProductInfoFromProductDTO(AdminProductDTO productDTO) {
-        Set<ProductInfo> productInfoSet = new HashSet<>();
+    private Set<ProductInfoEntity> getProductInfoFromProductDTO(AdminProductDTO productDTO) {
+        Set<ProductInfoEntity> productInfoSet = new HashSet<>();
         for (ProductInfoDTO productInfoDTO : productDTO.getProductInfo()) {
-            ProductInfo productInfo = ProductInfo.builder()
+            ProductInfoEntity productInfo = ProductInfoEntity.builder()
                     .productInfoId(productInfoDTO.getProductInfoId())
                     .name(productInfoDTO.getName())
                     .description(productInfoDTO.getDescription())
@@ -110,10 +110,10 @@ public class ProductServiceImpl implements ProductService {
         return productInfoSet;
     }
 
-    private Set<ProductPrice> getProductPricesFromProductDTO(AdminProductDTO productDTO) {
-        Set<ProductPrice> productPriceSet = new HashSet<>();
+    private Set<ProductPriceEntity> getProductPricesFromProductDTO(AdminProductDTO productDTO) {
+        Set<ProductPriceEntity> productPriceSet = new HashSet<>();
         for (ProductPriceDTO productPriceDTO : productDTO.getProductPrices()) {
-            ProductPrice productPrice = ProductPrice.builder()
+            ProductPriceEntity productPrice = ProductPriceEntity.builder()
                     .priceId(productPriceDTO.getPriceId())
                     .currency(productPriceDTO.getCurrency())
                     .price(productPriceDTO.getPrice())
@@ -129,28 +129,28 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void updateProduct(Long productId, AdminProductDTO productDTO) {
-        Product product = productRepository.findById(productId)
+        ProductEntity productEntity = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
 
-        updateProductInfo(product.getProductInfo(), productDTO.getProductInfo());
-        updateProductPrices(product.getProductPrices(), productDTO.getProductPrices());
-        product.setModified(LocalDateTime.now());
-        productRepository.save(product);
+        updateProductInfo(productEntity.getProductInfo(), productDTO.getProductInfo());
+        updateProductPrices(productEntity.getProductPrices(), productDTO.getProductPrices());
+        productEntity.setModified(LocalDateTime.now());
+        productRepository.save(productEntity);
     }
 
-    private void updateProductInfo(Set<ProductInfo> existingProductInfoSet, Set<ProductInfoDTO> productInfoDTOSet) {
-        Map<Long, ProductInfo> existingProductInfoMap = new HashMap<>();
+    private void updateProductInfo(Set<ProductInfoEntity> existingProductInfoSet, Set<ProductInfoDTO> productInfoDTOSet) {
+        Map<Long, ProductInfoEntity> existingProductInfoMap = new HashMap<>();
         existingProductInfoSet.forEach(pi -> existingProductInfoMap.put(pi.getProductInfoId(), pi));
 
         for (ProductInfoDTO productInfoDTO : productInfoDTOSet) {
-            ProductInfo existingProductInfo = existingProductInfoMap.get(productInfoDTO.getProductInfoId());
+            ProductInfoEntity existingProductInfo = existingProductInfoMap.get(productInfoDTO.getProductInfoId());
 
             if (existingProductInfo != null) {
                 existingProductInfo.setName(productInfoDTO.getName());
                 existingProductInfo.setDescription(productInfoDTO.getDescription());
                 existingProductInfo.setLocale(productInfoDTO.getLocale());
             } else {
-                ProductInfo newProductInfo = ProductInfo.builder()
+                ProductInfoEntity newProductInfo = ProductInfoEntity.builder()
                         .name(productInfoDTO.getName())
                         .description(productInfoDTO.getDescription())
                         .locale(productInfoDTO.getLocale())
@@ -160,18 +160,18 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void updateProductPrices(Set<ProductPrice> existingPrices, Set<ProductPriceDTO> productPriceDTOSet) {
-        Map<Long, ProductPrice> existingProductPricesMap = new HashMap<>();
+    private void updateProductPrices(Set<ProductPriceEntity> existingPrices, Set<ProductPriceDTO> productPriceDTOSet) {
+        Map<Long, ProductPriceEntity> existingProductPricesMap = new HashMap<>();
         existingPrices.forEach(pp -> existingProductPricesMap.put(pp.getPriceId(), pp));
 
         for (ProductPriceDTO productPriceDTO : productPriceDTOSet) {
-            ProductPrice existingPrice = existingProductPricesMap.get(productPriceDTO.getPriceId());
+            ProductPriceEntity existingPrice = existingProductPricesMap.get(productPriceDTO.getPriceId());
 
             if (existingPrice != null) {
                 existingPrice.setPrice(productPriceDTO.getPrice());
                 existingPrice.setCurrency(productPriceDTO.getCurrency());
             } else {
-                ProductPrice productPrice = ProductPrice.builder()
+                ProductPriceEntity productPrice = ProductPriceEntity.builder()
                         .price(productPriceDTO.getPrice())
                         .currency(productPriceDTO.getCurrency())
                         .build();
