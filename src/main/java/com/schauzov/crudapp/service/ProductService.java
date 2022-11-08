@@ -3,7 +3,7 @@ package com.schauzov.crudapp.service;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.dto.CustomerProductDTO;
-import com.schauzov.crudapp.dto.ProductPriceDTO;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Currency;
 import java.util.Locale;
@@ -17,11 +17,9 @@ public interface ProductService {
 
     void deleteProduct(Long productId);
 
-    void updateProduct(Long productId, AdminProductDTO productDTO);
+    void replaceProduct(Long productId, AdminProductDTO productDTO);
 
-    void updateProductPrices(Long productId, JsonPatch patch);
-
-    void updateProductInfo(Long productId, JsonPatch patch);
+    void editProduct(Long productId, JsonPatch patch);
 
     CustomerProductDTO getProductById(Long productId, Locale locale, Currency currency);
 

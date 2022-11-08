@@ -1,5 +1,6 @@
 package com.schauzov.crudapp.exception.handling;
 
+import com.schauzov.crudapp.exception.IllegalProductBodyException;
 import com.schauzov.crudapp.exception.ProductNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,5 +20,13 @@ public class GlobalExceptionHandler {
         log.error(e.getMessage(), e);
         AppError appError = new AppError(HttpStatus.NOT_FOUND.value(), e.getMessage());
         return new ResponseEntity<>(appError, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(IllegalProductBodyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<AppError> handleIllegalProductBodyExceptionn(IllegalProductBodyException e) {
+        log.error(e.getMessage(), e);
+        AppError appError = new AppError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        return new ResponseEntity<>(appError, HttpStatus.BAD_REQUEST);
     }
 }

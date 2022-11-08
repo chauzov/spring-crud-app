@@ -33,13 +33,10 @@ public class ProductAdminController {
     }
 
     @PutMapping(path = "{productId}", consumes = "application/json")
-    public void updateProduct(@PathVariable("productId") Long id, @RequestBody AdminProductDTO productDTO) {
-        productService.updateProduct(id, productDTO);
+    public void replaceProduct(@PathVariable("productId") Long id, @RequestBody AdminProductDTO productDTO) {
+        productService.replaceProduct(id, productDTO);
     }
 
-    @PatchMapping(path = "{productId}/prices", consumes = "application/json")
-    public void updateProductPrices(@PathVariable("productId") Long id, @RequestBody JsonPatch patch) {}
-
-    @PatchMapping(path = "{productId}/info", consumes = "application/json")
-    public void updateProductInfo(@PathVariable("productId") Long id, @RequestBody JsonPatch patch) {}
+    @PatchMapping(path = "{productId}", consumes = "application/json-patch+json")
+    public void editProduct(@PathVariable Long id, @RequestBody JsonPatch patchDocument) {}
 }

@@ -12,27 +12,35 @@ import com.schauzov.crudapp.dto.ProductPriceDTO;
 import com.schauzov.crudapp.entity.ProductEntity;
 import com.schauzov.crudapp.entity.ProductInfoEntity;
 import com.schauzov.crudapp.entity.ProductPriceEntity;
+import com.schauzov.crudapp.exception.IllegalProductBodyException;
 import com.schauzov.crudapp.exception.ProductNotFoundException;
 import com.schauzov.crudapp.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
+import javax.validation.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
 @Slf4j
+@Validated
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
     private final ObjectMapper objectMapper;
 
+    private final Validator validator;
+
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository, ObjectMapper objectMapper) {
+    public ProductServiceImpl(ProductRepository productRepository, ObjectMapper objectMapper, Validator validator) {
         this.productRepository = productRepository;
         this.objectMapper = objectMapper;
+        this.validator = validator;
     }
 
 
@@ -80,9 +88,19 @@ public class ProductServiceImpl implements ProductService {
         return productPriceDTOSet;
     }
 
+    private Validator getValidator() {
+        if (this.validator != null) {
+            return this.validator;
+        }
+        // To support unit tests without app context
+        return Validation.buildDefaultValidatorFactory().getValidator();
+    }
+
     @Override
     public void addProduct(AdminProductDTO productDTO) {
         log.info("Adding product: " + productDTO);
+        validateProductDTO(productDTO);
+
         Set<ProductInfoEntity> productInfoSet = getProductInfoFromProductDTO(productDTO);
         Set<ProductPriceEntity> productPriceSet = getProductPricesFromProductDTO(productDTO);
 
@@ -94,6 +112,17 @@ public class ProductServiceImpl implements ProductService {
                 .build();
 
         productRepository.save(productEntity);
+    }
+
+    private void validateProductDTO(AdminProductDTO productDTO) {
+        Validator productValidator = getValidator();
+        Set<ConstraintViolation<AdminProductDTO>> violations = productValidator.validate(productDTO);
+
+        if (!violations.isEmpty()) {
+            StringJoiner stringJoiner = new StringJoiner(",");
+            violations.forEach(v -> stringJoiner.add(v.getMessage()));
+            throw new IllegalProductBodyException(stringJoiner.toString());
+        }
     }
 
     private Set<ProductInfoEntity> getProductInfoFromProductDTO(AdminProductDTO productDTO) {
@@ -128,66 +157,89 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void updateProduct(Long productId, AdminProductDTO productDTO) {
+    @Transactional
+    public void replaceProduct(Long productId, AdminProductDTO productDTO) {
         ProductEntity productEntity = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
 
-        updateProductInfo(productEntity.getProductInfo(), productDTO.getProductInfo());
-        updateProductPrices(productEntity.getProductPrices(), productDTO.getProductPrices());
+        replaceProductInfo(productEntity.getProductInfo(), productDTO.getProductInfo());
+        replaceProductPrices(productEntity.getProductPrices(), productDTO.getProductPrices());
+
         productEntity.setModified(LocalDateTime.now());
+
         productRepository.save(productEntity);
     }
 
-    private void updateProductInfo(Set<ProductInfoEntity> existingProductInfoSet, Set<ProductInfoDTO> productInfoDTOSet) {
+    private void replaceProductInfo(Set<ProductInfoEntity> existingProductInfoEntities,
+                                                            Set<ProductInfoDTO> newProductInfoDTOs)
+    {
         Map<Long, ProductInfoEntity> existingProductInfoMap = new HashMap<>();
-        existingProductInfoSet.forEach(pi -> existingProductInfoMap.put(pi.getProductInfoId(), pi));
+        existingProductInfoEntities.forEach(pi -> existingProductInfoMap.put(pi.getProductInfoId(), pi));
 
-        for (ProductInfoDTO productInfoDTO : productInfoDTOSet) {
+        for (ProductInfoDTO productInfoDTO : newProductInfoDTOs) {
             ProductInfoEntity existingProductInfo = existingProductInfoMap.get(productInfoDTO.getProductInfoId());
 
             if (existingProductInfo != null) {
+                // Update existing entities
                 existingProductInfo.setName(productInfoDTO.getName());
                 existingProductInfo.setDescription(productInfoDTO.getDescription());
                 existingProductInfo.setLocale(productInfoDTO.getLocale());
+                // Remove processed entries from the map
+                existingProductInfoMap.remove(existingProductInfo.getProductInfoId());
             } else {
+                // Does not exist - create new
                 ProductInfoEntity newProductInfo = ProductInfoEntity.builder()
                         .name(productInfoDTO.getName())
                         .description(productInfoDTO.getDescription())
                         .locale(productInfoDTO.getLocale())
                         .build();
-                existingProductInfoSet.add(newProductInfo);
+                existingProductInfoEntities.add(newProductInfo);
             }
         }
+        // Unprocessed entries that were not found in the incoming DTO must be deleted
+        existingProductInfoMap.forEach((productInfoId, productInfo) -> {
+            log.info("Removing product info: {}", productInfo);
+            existingProductInfoEntities.remove(productInfo);
+        });
     }
 
-    private void updateProductPrices(Set<ProductPriceEntity> existingPrices, Set<ProductPriceDTO> productPriceDTOSet) {
+    private void replaceProductPrices(Set<ProductPriceEntity> existingPriceEntities,
+                                                               Set<ProductPriceDTO> newProductPriceDTOs)
+    {
         Map<Long, ProductPriceEntity> existingProductPricesMap = new HashMap<>();
-        existingPrices.forEach(pp -> existingProductPricesMap.put(pp.getPriceId(), pp));
+        existingPriceEntities.forEach(pp -> existingProductPricesMap.put(pp.getPriceId(), pp));
 
-        for (ProductPriceDTO productPriceDTO : productPriceDTOSet) {
+        for (ProductPriceDTO productPriceDTO : newProductPriceDTOs) {
             ProductPriceEntity existingPrice = existingProductPricesMap.get(productPriceDTO.getPriceId());
 
             if (existingPrice != null) {
+                // Update existing entities
                 existingPrice.setPrice(productPriceDTO.getPrice());
                 existingPrice.setCurrency(productPriceDTO.getCurrency());
+                // Remove processed entries from the map
+                existingProductPricesMap.remove(productPriceDTO.getPriceId());
             } else {
+                // Does not exist - create new
                 ProductPriceEntity productPrice = ProductPriceEntity.builder()
                         .price(productPriceDTO.getPrice())
                         .currency(productPriceDTO.getCurrency())
                         .build();
-                existingPrices.add(productPrice);
+                existingPriceEntities.add(productPrice);
             }
         }
+        // Unprocessed entries that were not found in the incoming DTO must be deleted
+        existingProductPricesMap.forEach((productInfoId, productPrice) -> {
+            log.info("Removing product price: {}", productPrice);
+            existingPriceEntities.remove(productPrice);
+        });
     }
 
     @Override
-    public void updateProductPrices(Long productId, JsonPatch patch) {
+    public void editProduct(Long productId, JsonPatch patch) {
+        ProductEntity productEntity = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
 
-    }
-
-    @Override
-    public void updateProductInfo(Long productId, JsonPatch patch) {
-
+        // TODO: implement patching
     }
 
     private AdminProductDTO applyPatchToProduct(JsonPatch patch, AdminProductDTO productDTO)
@@ -208,6 +260,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Set<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency, String searchString) {
-        return null;
+        // TODO: implement search
+        return new HashSet<>();
     }
 }

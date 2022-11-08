@@ -2,6 +2,7 @@ package com.schauzov.crudapp.dto;
 
 import lombok.*;
 
+import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -12,7 +13,9 @@ import java.util.Set;
 @ToString
 public class AdminProductDTO {
     private Long productId;
+    @Valid
     private Set<ProductInfoDTO> productInfo;
+    @Valid
     private Set<ProductPriceDTO> productPrices;
     private LocalDateTime created;
     private LocalDateTime modified;
