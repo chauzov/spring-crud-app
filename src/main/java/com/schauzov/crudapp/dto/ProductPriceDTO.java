@@ -17,5 +17,6 @@ public class ProductPriceDTO {
     @NotNull(message = "Product price cannot be null")
     @Positive(message = "Product price must be greater than zero")
     private BigDecimal price;
+    @NotNull(message = "Product price currency must be specified")
     private Currency currency;
 }

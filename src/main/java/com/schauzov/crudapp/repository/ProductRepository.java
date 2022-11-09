@@ -17,5 +17,5 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             " from product p, product_info pi, product_price pp" +
             " where p.product_id = pi.product_id and p.product_id = pp.product_id and" +
             " p.product_id = ?1 and pi.locale = ?2 and pp.currency = ?3", nativeQuery = true)
-    List<CustomerProductDTO> findProductByProductIdAndLocaleAndCurrency(Long productId, Locale locale, Currency currency);
+    List<CustomerProductDTO> findProductByIdAndLocaleAndCurrency(Long productId, Locale locale, Currency currency);
 }

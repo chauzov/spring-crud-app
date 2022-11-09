@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
+import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.dto.CustomerProductDTO;
 import com.schauzov.crudapp.dto.ProductInfoDTO;
@@ -13,15 +14,19 @@ import com.schauzov.crudapp.entity.ProductEntity;
 import com.schauzov.crudapp.entity.ProductInfoEntity;
 import com.schauzov.crudapp.entity.ProductPriceEntity;
 import com.schauzov.crudapp.exception.IllegalProductBodyException;
+import com.schauzov.crudapp.exception.InapplicablePatchException;
 import com.schauzov.crudapp.exception.ProductNotFoundException;
 import com.schauzov.crudapp.repository.ProductRepository;
+import com.schauzov.crudapp.util.PatchOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -45,23 +50,10 @@ public class ProductServiceImpl implements ProductService {
 
 
     public AdminProductDTO getProductById(Long id) {
-        // Return 404 with empty body when not found
-        ProductEntity productEntity = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
-
-        Set<ProductInfoDTO> productInfoDTOSet = getProductInfoFromProductEntity(productEntity);
-        Set<ProductPriceDTO> productPriceDTOSet = getProductPriceFromProductEntity(productEntity);
-
-        return AdminProductDTO.builder()
-                .productId(productEntity.getProductId())
-                .created(productEntity.getCreated())
-                .modified(productEntity.getModified())
-                .productInfo(productInfoDTOSet)
-                .productPrices(productPriceDTOSet)
-                .build();
+        return getProductDtoFromEntity(getProductEntityById(id));
     }
 
-    private Set<ProductInfoDTO> getProductInfoFromProductEntity(ProductEntity productEntity) {
+    private AdminProductDTO getProductDtoFromEntity(ProductEntity productEntity) {
         Set<ProductInfoDTO> productInfoDTOSet = new HashSet<>();
         for (ProductInfoEntity productInfo : productEntity.getProductInfo()) {
             ProductInfoDTO productInfoDTO = ProductInfoDTO.builder()
@@ -72,10 +64,7 @@ public class ProductServiceImpl implements ProductService {
                     .build();
             productInfoDTOSet.add(productInfoDTO);
         }
-        return productInfoDTOSet;
-    }
 
-    private Set<ProductPriceDTO> getProductPriceFromProductEntity(ProductEntity productEntity) {
         Set<ProductPriceDTO> productPriceDTOSet = new HashSet<>();
         for(ProductPriceEntity productPrice : productEntity.getProductPrices()) {
             ProductPriceDTO productPriceDTO = ProductPriceDTO.builder()
@@ -85,7 +74,14 @@ public class ProductServiceImpl implements ProductService {
                     .build();
             productPriceDTOSet.add(productPriceDTO);
         }
-        return productPriceDTOSet;
+
+        return AdminProductDTO.builder()
+                .productId(productEntity.getProductId())
+                .created(productEntity.getCreated())
+                .modified(productEntity.getModified())
+                .productInfo(productInfoDTOSet)
+                .productPrices(productPriceDTOSet)
+                .build();
     }
 
     private Validator getValidator() {
@@ -97,12 +93,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void addProduct(AdminProductDTO productDTO) {
+    public long addProduct(AdminProductDTO productDTO) {
         log.info("Adding product: " + productDTO);
         validateProductDTO(productDTO);
 
-        Set<ProductInfoEntity> productInfoSet = getProductInfoFromProductDTO(productDTO);
-        Set<ProductPriceEntity> productPriceSet = getProductPricesFromProductDTO(productDTO);
+        Set<ProductInfoEntity> productInfoSet = new HashSet<>();
+        for (ProductInfoDTO productInfoDTO : productDTO.getProductInfo()) {
+            ProductInfoEntity productInfo = ProductInfoEntity.builder()
+                    .productInfoId(productInfoDTO.getProductInfoId())
+                    .name(productInfoDTO.getName())
+                    .description(productInfoDTO.getDescription())
+                    .locale(productInfoDTO.getLocale())
+                    .build();
+            productInfoSet.add(productInfo);
+        }
+
+        Set<ProductPriceEntity> productPriceSet = new HashSet<>();
+        for (ProductPriceDTO productPriceDTO : productDTO.getProductPrices()) {
+            ProductPriceEntity productPrice = ProductPriceEntity.builder()
+                    .priceId(productPriceDTO.getPriceId())
+                    .currency(productPriceDTO.getCurrency())
+                    .price(productPriceDTO.getPrice())
+                    .build();
+            productPriceSet.add(productPrice);
+        }
 
         ProductEntity productEntity = ProductEntity.builder()
                 .productInfo(productInfoSet)
@@ -111,7 +125,9 @@ public class ProductServiceImpl implements ProductService {
                 .modified(LocalDateTime.now())
                 .build();
 
-        productRepository.save(productEntity);
+        long productId = productRepository.save(productEntity).getProductId();
+        log.info("The product has been saved with ID {}", productId);
+        return productId;
     }
 
     private void validateProductDTO(AdminProductDTO productDTO) {
@@ -125,49 +141,30 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private Set<ProductInfoEntity> getProductInfoFromProductDTO(AdminProductDTO productDTO) {
-        Set<ProductInfoEntity> productInfoSet = new HashSet<>();
-        for (ProductInfoDTO productInfoDTO : productDTO.getProductInfo()) {
-            ProductInfoEntity productInfo = ProductInfoEntity.builder()
-                    .productInfoId(productInfoDTO.getProductInfoId())
-                    .name(productInfoDTO.getName())
-                    .description(productInfoDTO.getDescription())
-                    .locale(productInfoDTO.getLocale())
-                    .build();
-            productInfoSet.add(productInfo);
-        }
-        return productInfoSet;
-    }
-
-    private Set<ProductPriceEntity> getProductPricesFromProductDTO(AdminProductDTO productDTO) {
-        Set<ProductPriceEntity> productPriceSet = new HashSet<>();
-        for (ProductPriceDTO productPriceDTO : productDTO.getProductPrices()) {
-            ProductPriceEntity productPrice = ProductPriceEntity.builder()
-                    .priceId(productPriceDTO.getPriceId())
-                    .currency(productPriceDTO.getCurrency())
-                    .price(productPriceDTO.getPrice())
-                    .build();
-            productPriceSet.add(productPrice);
-        }
-        return productPriceSet;
+    private ProductEntity getProductEntityById(Long productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
     }
 
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+        log.info("The product with ID {} has been deleted", id);
     }
 
     @Override
     @Transactional
     public void replaceProduct(Long productId, AdminProductDTO productDTO) {
-        ProductEntity productEntity = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+        ProductEntity productEntity = getProductEntityById(productId);
+        validateProductDTO(productDTO);
+        updateProductEntityFromDTO(productEntity, productDTO);
+        productRepository.save(productEntity);
+        log.info("The product with ID {} has been replaced", productId);
+    }
 
+    private void updateProductEntityFromDTO(ProductEntity productEntity, AdminProductDTO productDTO) {
         replaceProductInfo(productEntity.getProductInfo(), productDTO.getProductInfo());
         replaceProductPrices(productEntity.getProductPrices(), productDTO.getProductPrices());
-
         productEntity.setModified(LocalDateTime.now());
-
-        productRepository.save(productEntity);
     }
 
     private void replaceProductInfo(Set<ProductInfoEntity> existingProductInfoEntities,
@@ -235,23 +232,58 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void editProduct(Long productId, JsonPatch patch) {
-        ProductEntity productEntity = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(productId));
+    public void editProduct(Long productId, List<JsonPatchOperation> patchOperations) {
+        validatePatchBody(productId, patchOperations);
 
-        // TODO: implement patching
+        ProductEntity productEntity = getProductEntityById(productId);
+        AdminProductDTO productDTO = getProductDtoFromEntity(productEntity);
+
+        AdminProductDTO patchedProductDTO;
+        JsonPatch patch = new JsonPatch(patchOperations);
+
+        try {
+            JsonNode patchedJson = patch.apply(objectMapper.convertValue(productDTO, JsonNode.class));
+            patchedProductDTO = objectMapper.treeToValue(patchedJson, AdminProductDTO.class);
+        } catch (JsonPatchException | JsonProcessingException e) {
+            throw new InapplicablePatchException(productId, e.getMessage());
+        }
+
+        validateProductDTO(patchedProductDTO);
+        updateProductEntityFromDTO(productEntity, patchedProductDTO);
+        productRepository.save(productEntity);
+        log.info("The product with ID {} has been updated", productId);
     }
 
-    private AdminProductDTO applyPatchToProduct(JsonPatch patch, AdminProductDTO productDTO)
-            throws JsonPatchException, JsonProcessingException {
-        JsonNode patchedProductDTO = patch.apply(objectMapper.convertValue(productDTO, JsonNode.class));
-        return objectMapper.treeToValue(patchedProductDTO, AdminProductDTO.class);
+    private void validatePatchBody(Long productId, List<JsonPatchOperation> patchOperations) {
+        List<String> protectedPaths = Arrays.asList(
+                "productId", "created", "modified", "productInfoId", "priceId");
+
+        PatchOperation[] operations = objectMapper.convertValue(patchOperations, PatchOperation[].class);
+        String errorMessage = "The following properties cannot be modified: " + Arrays.toString(protectedPaths.toArray());
+
+        for (PatchOperation op : operations) {
+            // We should not delete or replace protected properties
+            if ((op.getOp().equals("remove") || op.getOp().equals("replace")) &&
+                    protectedPaths.stream().anyMatch(op.getPath()::contains)) {
+                throw new InapplicablePatchException(productId, errorMessage);
+            }
+
+            // We should not move protected properties
+            if (op.getOp().equals("move") && protectedPaths.stream().anyMatch(op.getFrom()::contains)) {
+                throw new InapplicablePatchException(productId, errorMessage);
+            }
+
+            // We should not overwrite protected properties
+            if (op.getOp().equals("copy") && protectedPaths.stream().anyMatch(op.getPath()::contains)) {
+                throw new InapplicablePatchException(productId, errorMessage);
+            }
+        }
     }
 
     @Override
     public CustomerProductDTO getProductById(Long productId, Locale locale, Currency currency) {
         List<CustomerProductDTO> products = productRepository
-                .findProductByProductIdAndLocaleAndCurrency(productId, locale, currency);
+                .findProductByIdAndLocaleAndCurrency(productId, locale, currency);
         if (products.isEmpty()) {
             throw new ProductNotFoundException(productId, locale, currency);
         }
