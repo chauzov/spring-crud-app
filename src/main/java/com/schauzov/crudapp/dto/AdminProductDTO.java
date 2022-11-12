@@ -21,7 +21,6 @@ public class AdminProductDTO {
     @Valid
     @NotNull
     private Set<ProductPriceDTO> productPrices;
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime created;
     private LocalDateTime modified;
 }

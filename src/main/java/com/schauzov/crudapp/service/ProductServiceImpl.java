@@ -1,6 +1,7 @@
 package com.schauzov.crudapp.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
@@ -20,6 +21,8 @@ import com.schauzov.crudapp.repository.ProductRepository;
 import com.schauzov.crudapp.util.PatchOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -50,38 +53,7 @@ public class ProductServiceImpl implements ProductService {
 
 
     public AdminProductDTO getProductById(Long id) {
-        return getProductDtoFromEntity(getProductEntityById(id));
-    }
-
-    private AdminProductDTO getProductDtoFromEntity(ProductEntity productEntity) {
-        Set<ProductInfoDTO> productInfoDTOSet = new HashSet<>();
-        for (ProductInfoEntity productInfo : productEntity.getProductInfo()) {
-            ProductInfoDTO productInfoDTO = ProductInfoDTO.builder()
-                    .productInfoId(productInfo.getProductInfoId())
-                    .name(productInfo.getName())
-                    .locale(productInfo.getLocale())
-                    .description(productInfo.getDescription())
-                    .build();
-            productInfoDTOSet.add(productInfoDTO);
-        }
-
-        Set<ProductPriceDTO> productPriceDTOSet = new HashSet<>();
-        for(ProductPriceEntity productPrice : productEntity.getProductPrices()) {
-            ProductPriceDTO productPriceDTO = ProductPriceDTO.builder()
-                    .priceId(productPrice.getPriceId())
-                    .price(productPrice.getPrice())
-                    .currency(productPrice.getCurrency())
-                    .build();
-            productPriceDTOSet.add(productPriceDTO);
-        }
-
-        return AdminProductDTO.builder()
-                .productId(productEntity.getProductId())
-                .created(productEntity.getCreated())
-                .modified(productEntity.getModified())
-                .productInfo(productInfoDTOSet)
-                .productPrices(productPriceDTOSet)
-                .build();
+        return objectMapper.convertValue(getProductEntityById(id), AdminProductDTO.class);
     }
 
     private Validator getValidator() {
@@ -97,37 +69,26 @@ public class ProductServiceImpl implements ProductService {
         log.info("Adding product: " + productDTO);
         validateProductDTO(productDTO);
 
-        Set<ProductInfoEntity> productInfoSet = new HashSet<>();
-        for (ProductInfoDTO productInfoDTO : productDTO.getProductInfo()) {
-            ProductInfoEntity productInfo = ProductInfoEntity.builder()
-                    .productInfoId(productInfoDTO.getProductInfoId())
-                    .name(productInfoDTO.getName())
-                    .description(productInfoDTO.getDescription())
-                    .locale(productInfoDTO.getLocale())
-                    .build();
-            productInfoSet.add(productInfo);
-        }
-
-        Set<ProductPriceEntity> productPriceSet = new HashSet<>();
-        for (ProductPriceDTO productPriceDTO : productDTO.getProductPrices()) {
-            ProductPriceEntity productPrice = ProductPriceEntity.builder()
-                    .priceId(productPriceDTO.getPriceId())
-                    .currency(productPriceDTO.getCurrency())
-                    .price(productPriceDTO.getPrice())
-                    .build();
-            productPriceSet.add(productPrice);
-        }
-
-        ProductEntity productEntity = ProductEntity.builder()
-                .productInfo(productInfoSet)
-                .productPrices(productPriceSet)
-                .created(LocalDateTime.now())
-                .modified(LocalDateTime.now())
-                .build();
+        ProductEntity productEntity = objectMapper.convertValue(productDTO, ProductEntity.class);
+        productEntity.setCreated(LocalDateTime.now());
+        productEntity.setModified(LocalDateTime.now());
 
         long productId = productRepository.save(productEntity).getProductId();
         log.info("The product has been saved with ID {}", productId);
         return productId;
+    }
+
+    @Override
+    public void addMultipleProducts(List<AdminProductDTO> productDTOs) {
+        log.info("Adding products: " + productDTOs);
+        productDTOs.forEach(this::validateProductDTO);
+        List<ProductEntity> productEntities = objectMapper.convertValue(productDTOs, new TypeReference<>(){});
+        productEntities.forEach(p -> {
+            p.setCreated(LocalDateTime.now());
+            p.setModified(LocalDateTime.now());
+        });
+        productRepository.saveAll(productEntities);
+        log.info("The products have been saved");
     }
 
     private void validateProductDTO(AdminProductDTO productDTO) {
@@ -236,7 +197,7 @@ public class ProductServiceImpl implements ProductService {
         validatePatchBody(productId, patchOperations);
 
         ProductEntity productEntity = getProductEntityById(productId);
-        AdminProductDTO productDTO = getProductDtoFromEntity(productEntity);
+        AdminProductDTO productDTO = objectMapper.convertValue(productEntity, AdminProductDTO.class);
 
         AdminProductDTO patchedProductDTO;
         JsonPatch patch = new JsonPatch(patchOperations);
@@ -291,8 +252,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Set<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency, String searchString) {
-        // TODO: implement search
-        return new HashSet<>();
+    public Page<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency,
+                                                         String searchString, Pageable pageable) {
+        Page<CustomerProductDTO> products;
+
+        if (searchString.isEmpty()) {
+            products = productRepository.findProductsByLocaleAndCurrency(locale, currency, pageable);
+        } else {
+            products = productRepository
+                    .findProductsByLocaleAndCurrencyAndNameOrDescription(locale, currency, searchString, pageable);
+        }
+
+        if (products.isEmpty()) {
+            throw new ProductNotFoundException(locale, currency, searchString);
+        }
+        return products;
     }
 }

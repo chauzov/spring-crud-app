@@ -1,6 +1,5 @@
 package com.schauzov.crudapp.controller;
 
-import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.http.AppResponse;
@@ -29,10 +28,19 @@ public class ProductAdminController {
     }
 
     @PostMapping
-    public ResponseEntity<AppResponse> addProduct(@RequestBody AdminProductDTO body) {
-        long productId = productService.addProduct(body);
-        AppResponse appResponse = new AppResponse(HttpStatus.CREATED.value(), "Added product with ID " + productId);
-        return new ResponseEntity<>(appResponse, HttpStatus.CREATED);
+    public ResponseEntity<AppResponse> addMultipleProducts(@RequestBody List<AdminProductDTO> body) {
+        String message;
+        HttpStatus status = HttpStatus.CREATED;
+
+        if (body.size() == 1) {
+            long productId = productService.addProduct(body.get(0));
+            message = "Added product with ID " + productId;
+        } else {
+            productService.addMultipleProducts(body);
+            message = "Products have been added";
+        }
+
+        return new ResponseEntity<>(new AppResponse(status.value(), message), status);
     }
 
     @DeleteMapping(path = "{productId}")

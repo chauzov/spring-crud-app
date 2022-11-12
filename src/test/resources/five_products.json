@@ -1,0 +1,42 @@
+[
+  {"productInfo": [
+    {"locale": "es", "name": "La leche", "description": "Leche normal 3%"},
+    {"locale": "fr", "name": "Le Lait", "description": "Lait ordinaire 3%"}
+  ],
+  "productPrices": [
+    {"price": 2.2, "currency": "EUR"},
+    {"price": 2.5, "currency": "USD"}
+  ]},
+  {"productInfo": [
+    {"locale": "en", "name": "Linden honey", "description": "High-quality linden honey"},
+    {"locale": "fr", "name": "Miel de tilleul", "description": "Miel de tilleul de haute qualité"}
+  ],
+    "productPrices": [
+      {"price": 5.2, "currency": "EUR"},
+      {"price": 5, "currency": "USD"}
+    ]},
+  {"productInfo": [
+    {"locale": "en", "name": "Coffee", "description": "100% Arabica coffee"},
+    {"locale": "fr", "name": "Cafe", "description": "Café Arabica 100%"}
+  ],
+    "productPrices": [
+      {"price": 7, "currency": "EUR"},
+      {"price": 6.5, "currency": "USD"}
+    ]},
+  {"productInfo": [
+    {"locale": "en", "name": "Beef", "description": "Texas beef"},
+    {"locale": "fr", "name": "Bœuf", "description": "Bœuf texan"}
+  ],
+    "productPrices": [
+      {"price": 4.2, "currency": "EUR"},
+      {"price": 4, "currency": "USD"}
+    ]},
+  {"productInfo": [
+    {"locale": "en", "name": "Eggs", "description": "Eggs 12-pack"},
+    {"locale": "es", "name": "Huevos", "description": "Paquete de 12 huevos"}
+  ],
+    "productPrices": [
+      {"price": 3.5, "currency": "EUR"},
+      {"price": 3.2, "currency": "USD"}
+    ]}
+]

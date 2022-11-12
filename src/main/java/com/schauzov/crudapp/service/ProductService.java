@@ -1,20 +1,22 @@
 package com.schauzov.crudapp.service;
 
-import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.dto.CustomerProductDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 public interface ProductService {
 
     AdminProductDTO getProductById(Long productId);
 
-    long addProduct(AdminProductDTO productModel);
+    long addProduct(AdminProductDTO productDTO);
+
+    void addMultipleProducts(List<AdminProductDTO> productDTOs);
 
     void deleteProduct(Long productId);
 
@@ -24,5 +26,5 @@ public interface ProductService {
 
     CustomerProductDTO getProductById(Long productId, Locale locale, Currency currency);
 
-    Set<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency, String searchString);
+    Page<CustomerProductDTO> getAvailableProducts(Locale locale, Currency currency, String searchString, Pageable pageable);
 }
