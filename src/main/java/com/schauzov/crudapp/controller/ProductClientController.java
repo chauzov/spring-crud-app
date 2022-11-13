@@ -27,8 +27,9 @@ public class ProductClientController {
     public CustomerProductDTO getProductById(
             @PathVariable("productId") Long id,
             @RequestParam Locale locale,
-            @RequestParam Currency currency)
+            @RequestParam(name = "currency") String currencyCode)
     {
+        Currency currency = Currency.getInstance(currencyCode.toUpperCase());
         return productService.getProductById(id, locale, currency);
     }
 

@@ -6,7 +6,6 @@ import com.schauzov.crudapp.exception.TestInitializationException;
 import com.schauzov.crudapp.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -40,7 +39,7 @@ class ProductAdminControllerIntegrationTest {
         this.objectMapper = objectMapper;
     }
 
-    @BeforeEach
+    @AfterEach
     public void resetDb() {
         productRepository.deleteAll();
     }
@@ -81,27 +80,21 @@ class ProductAdminControllerIntegrationTest {
     }
 
     @Test
-    void getAllProductsByLocaleAndCurrency_Test() {
+    void getAllProductsByIdAndLocaleAndCurrency_Test() throws Exception {
         addMultipleProductsToDb("src/test/resources/five_products.json");
+
+        Long productId = 2L;
+        String locale = "en";
+        String currency = "usd";
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/api/v1/customer/product/{id}?locale={locale}&currency={currency}",
+                                productId, locale, currency)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.locale").value(locale))
+                .andExpect(jsonPath("$.currency").value(currency.toUpperCase()));
     }
 
-    @Test
-    void addProduct() {
-    }
-
-    @Test
-    void deleteProduct() {
-    }
-
-    @Test
-    void updateProduct() {
-    }
-
-    @Test
-    void updateProductPrices() {
-    }
-
-    @Test
-    void updateProductInfo() {
-    }
 }
