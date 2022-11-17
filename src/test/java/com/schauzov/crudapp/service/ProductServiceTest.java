@@ -3,6 +3,7 @@ package com.schauzov.crudapp.service;
 import com.schauzov.crudapp.dto.AdminProductDTO;
 import com.schauzov.crudapp.dto.ProductInfoDTO;
 import com.schauzov.crudapp.dto.ProductPriceDTO;
+import com.schauzov.crudapp.exception.IllegalProductBodyException;
 import com.schauzov.crudapp.repository.ProductRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.validation.ConstraintViolationException;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
@@ -52,10 +52,10 @@ class ProductServiceTest {
         AdminProductDTO productDTO = getDefaultAdminProductDTO();
         productDTO.getProductInfo().forEach(pi -> pi.setName(null));
 
-        ConstraintViolationException exception = Assertions.assertThrows(
-                ConstraintViolationException.class,
+        IllegalProductBodyException exception = Assertions.assertThrows(
+                IllegalProductBodyException.class,
                 () -> productService.addProduct(productDTO));
-        assertThat(exception.getMessage(), containsString("Product name cannot be null"));
+        assertThat(exception.getMessage(), containsString("Product name cannot be blank"));
     }
 
     @Test
@@ -63,8 +63,8 @@ class ProductServiceTest {
         AdminProductDTO productDTO = getDefaultAdminProductDTO();
         productDTO.getProductInfo().forEach(pi -> pi.setName(" "));
 
-        ConstraintViolationException exception = Assertions.assertThrows(
-                ConstraintViolationException.class,
+        IllegalProductBodyException exception = Assertions.assertThrows(
+                IllegalProductBodyException.class,
                 () -> productService.addProduct(productDTO));
         assertThat(exception.getMessage(), containsString("Product name cannot be blank"));
     }
@@ -74,8 +74,8 @@ class ProductServiceTest {
         AdminProductDTO productDTO = getDefaultAdminProductDTO();
         productDTO.getProductPrices().forEach(pp -> pp.setPrice(BigDecimal.valueOf(0)));
 
-        ConstraintViolationException exception = Assertions.assertThrows(
-                ConstraintViolationException.class,
+        IllegalProductBodyException exception = Assertions.assertThrows(
+                IllegalProductBodyException.class,
                 () -> productService.addProduct(productDTO));
         assertThat(exception.getMessage(), containsString("Product price must be greater than zero"));
     }
@@ -85,8 +85,8 @@ class ProductServiceTest {
         AdminProductDTO productDTO = getDefaultAdminProductDTO();
         productDTO.getProductPrices().forEach(pp -> pp.setPrice(BigDecimal.valueOf(-1)));
 
-        ConstraintViolationException exception = Assertions.assertThrows(
-                ConstraintViolationException.class,
+        IllegalProductBodyException exception = Assertions.assertThrows(
+                IllegalProductBodyException.class,
                 () -> productService.addProduct(productDTO));
         assertThat(exception.getMessage(), containsString("Product price must be greater than zero"));
     }
@@ -96,8 +96,8 @@ class ProductServiceTest {
         AdminProductDTO productDTO = getDefaultAdminProductDTO();
         productDTO.getProductPrices().forEach(pp -> pp.setPrice(null));
 
-        ConstraintViolationException exception = Assertions.assertThrows(
-                ConstraintViolationException.class,
+        IllegalProductBodyException exception = Assertions.assertThrows(
+                IllegalProductBodyException.class,
                 () -> productService.addProduct(productDTO));
         assertThat(exception.getMessage(), containsString("Product price cannot be null"));
     }

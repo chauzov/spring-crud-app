@@ -44,7 +44,7 @@ class ProductAdminControllerIntegrationTest {
         productRepository.deleteAll();
     }
 
-    private void addOneProductToDB(String productFilename) {
+    private ProductEntity addOneProductToDB(String productFilename) {
         ProductEntity productEntity;
         try {
             productEntity = objectMapper.readValue(new File(productFilename), ProductEntity.class);
@@ -52,7 +52,7 @@ class ProductAdminControllerIntegrationTest {
             log.error("Could not load file {}: {}", productFilename, ioException.getMessage());
             throw new TestInitializationException();
         }
-        productRepository.save(productEntity);
+        return productRepository.save(productEntity);
     }
 
     private void addMultipleProductsToDb(String productFilename) {
@@ -68,15 +68,14 @@ class ProductAdminControllerIntegrationTest {
 
     @Test
     void getProductByIdTest() throws Exception {
-        addOneProductToDB("src/test/resources/product1.json");
-        Long productId = 1L;
+        Long productId = addOneProductToDB("src/test/resources/product1.json").getProductId();
 
         mockMvc.perform(MockMvcRequestBuilders
                 .get("/api/v1/admin/product/{id}", productId)
                 .accept(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.productId").value(1));
+                    .andExpect(jsonPath("$.productId").value(productId));
     }
 
     @Test
