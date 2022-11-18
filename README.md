@@ -32,7 +32,7 @@ Customer must specify both **locale** and **currency** when requesting a product
 
 ## Build and run the application
 
-Java and Maven are required to build and run the application. To speed up the application deployment it is recommended to build and run the application on a machine with Docker installed. This will allow to avoid manual database set up.
+Java 11 and Maven 3.8.x are required to build and run the application. To speed up the application deployment it is recommended to build and run the application on a machine with Docker installed. This will allow to avoid manual database set up.
 
 ### With Docker
 1. Create a local copy of the project:
