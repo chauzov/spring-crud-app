@@ -17,6 +17,7 @@ import com.schauzov.crudapp.entity.ProductPriceEntity;
 import com.schauzov.crudapp.exception.IllegalProductBodyException;
 import com.schauzov.crudapp.exception.InapplicablePatchException;
 import com.schauzov.crudapp.exception.ProductNotFoundException;
+import com.schauzov.crudapp.mapper.AdminProductMapper;
 import com.schauzov.crudapp.repository.ProductRepository;
 import com.schauzov.crudapp.util.PatchOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -39,21 +40,25 @@ import java.util.*;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-
     private final ObjectMapper objectMapper;
-
     private final Validator validator;
+    private final AdminProductMapper adminProductMapper;
 
     @Autowired
-    public ProductServiceImpl(ProductRepository productRepository, ObjectMapper objectMapper, Validator validator) {
+    public ProductServiceImpl(ProductRepository productRepository,
+                              ObjectMapper objectMapper,
+                              Validator validator,
+                              AdminProductMapper adminProductMapper) {
         this.productRepository = productRepository;
         this.objectMapper = objectMapper;
         this.validator = validator;
+        this.adminProductMapper = adminProductMapper;
     }
 
 
     public AdminProductDTO getProductById(Long id) {
-        return objectMapper.convertValue(getProductEntityById(id), AdminProductDTO.class);
+        ProductEntity product = getProductEntityById(id);
+        return adminProductMapper.toDto(product);
     }
 
     private Validator getValidator() {

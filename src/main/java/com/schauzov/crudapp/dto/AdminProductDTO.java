@@ -1,6 +1,5 @@
 package com.schauzov.crudapp.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import javax.validation.Valid;
